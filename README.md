@@ -2,7 +2,7 @@
 
 ## Expose HTTP Service via a websocke tunnel
 
-Use case: access a webservice behind a private network through a public edge
+Use case: access a webservice behind a private network through a public edge without router configuration port forwaring
 
 [ Browser ] --(http request)--> [ Public Edge Server ] --(ws message)--> [ Private reverse proxy ] --(http request)--> [ Private Web Service ]
 
