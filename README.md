@@ -5,19 +5,19 @@
 Use case: access a webservice behind a private network through a public edge without router port forwaring configuration
 
 ```
-+-------------------+                         +-------------------------+
-|                   |      2: http req        |                         |           Internet
-|     Browser       |  +------------------->  |    Public Edge Server   |
-|                   |                         |                         |
-+-------------------+                         +-+----------------------++
-                                                |                      ^
++-------------------+                         +--------------------------+
+|                   |      2: http req        |         webstun          |          Internet
+|     Browser       |  +------------------->  |    Public Edge Server    |
+|                   |                         |                          |
++-------------------+                         +-+----------------------^-+
                                                 |                      |
-               ------------------------------------------------------------------------------------
                                                 |                      |
+               ---------------------------------+--------------------------------------------------
+                                                                       |
                                        3: ws forward http req        1: websocket connection
                                                 |                      |
 +-------------------------+                  +--v----------------------+-+
-|                         |                  |                           |          Private Network
+|                         |                  |         webstun           |          Private Network
 |    Private Web service  |  4: http req     |    Private Reverse Proxy  |
 |                         <------------------+                           |
 +-------------------------+                  +---------------------------+
