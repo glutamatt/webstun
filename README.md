@@ -18,7 +18,7 @@ Use case: access a webservice behind a private network through a public edge wit
                                                 +    |                 |
 +-------------------------+  5: http res     +--v----+-----------------+-+
 |                         +------------------>         webstun           |          Private Network
-|    Pri^ate Web service  |  4: http req     |    Private Reverse Proxy  |
+|    Private Web service  |  4: http req     |    Private Reverse Proxy  |
 |                         <------------------+                           |
 +-------------------------+                  +---------------------------+
 
