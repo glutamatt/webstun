@@ -30,12 +30,16 @@ func main() {
 	responses := make(chan []byte)
 	signal.Notify(interrupt, os.Interrupt)
 
-	back := "http://blm-mastersearch-01.sadm.ig-1.net:9200" //"http://192.168.0.18:3000"
+	back := "https://grafana.deez.re" //"http://blm-mastersearch-01.sadm.ig-1.net:9200" //"http://192.168.0.18:3000"
 	backendURL, err := url.ParseRequestURI(back)
 	if err != nil {
 		log.Fatalf("url.ParseRequestURI %s err : %v", back, err)
 	}
-	proxy := httputil.NewSingleHostReverseProxy(backendURL)
+	director := httputil.NewSingleHostReverseProxy(backendURL).Director
+	proxy := &httputil.ReverseProxy{Director: func(r *http.Request) {
+		director(r)
+		r.Host = r.URL.Host
+	}}
 
 	go func() {
 		defer close(done)
@@ -92,10 +96,6 @@ func handleRequest(message []byte, responses chan []byte, proxy *httputil.Revers
 		log.Println("http.ReadRequest ERR :", err)
 		return
 	}
-
-	debug, _ := httputil.DumpRequest(req, true)
-	log.Println(string(debug))
-
 	rw := httptest.NewRecorder()
 	proxy.ServeHTTP(rw, req)
 	resp, err := httputil.DumpResponse(rw.Result(), true)
@@ -104,6 +104,5 @@ func handleRequest(message []byte, responses chan []byte, proxy *httputil.Revers
 		log.Println("httputil.DumpResponse ERR :", err)
 		return
 	}
-
 	responses <- append([]byte(hash), resp...)
 }

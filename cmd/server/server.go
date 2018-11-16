@@ -76,7 +76,6 @@ func main() {
 					return
 				}
 				if messageType == websocket.TextMessage {
-					log.Println("websocket.TextMessage incoming", string(message[:500]))
 					reader := bufio.NewReader(bytes.NewReader(message))
 					hash, err := reader.ReadString('\n')
 					if err != nil {
@@ -94,10 +93,8 @@ func main() {
 		}()
 
 		for {
-			log.Println("Waiting for http call...")
 			select {
 			case httpCall := <-httpCalls:
-				log.Println("Incomming call")
 				req, err := httputil.DumpRequest(httpCall.req, true)
 				if err != nil {
 					httpCall.resp <- errorResponse(fmt.Errorf("httputil.DumpRequest error: %v", err))
@@ -109,7 +106,6 @@ func main() {
 					httpCall.resp <- errorResponse(fmt.Errorf("conn.WriteMessage error (closing backend websocket connection): %v", err))
 					return
 				}
-				log.Println("conn.WriteMessage OK", "hash", hash)
 				go disp.Handle(hash, httpCall.resp)
 			}
 		}
@@ -128,21 +124,15 @@ type dispatcher struct {
 func (d *dispatcher) Handle(hash string, resp chan<- *http.Response) {
 	d.lock.Lock()
 	defer d.lock.Unlock()
-
-	log.Println("Handle", hash)
 	d.pipes[hash] = resp
 }
 
 func (d *dispatcher) Serve(hash string, resp *http.Response) {
 	d.lock.Lock()
 	defer d.lock.Unlock()
-
-	log.Println("Serve", hash)
 	if call, exist := d.pipes[hash]; exist {
-		log.Println("Serve", hash, "exist")
 		call <- resp
 		delete(d.pipes, hash)
-		log.Println("Serve", hash, "pushed")
 		return
 	}
 	log.Println("Serve", hash, "doesn't exist !!!")
