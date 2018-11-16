@@ -5,20 +5,20 @@
 Use case: access a webservice behind a private network through a public edge without router port forwaring configuration
 
 ```
-+-------------------+                         +--------------------------+
-|                   |      2: http req        |         webstun          |          Internet
-|     Browser       |  +------------------->  |    Public Edge Server    |
-|                   |                         |                          |
-+-------------------+                         +-+----------------------^-+
-                                                |                      |
-                                                |                      |
-               ---------------------------------+--------------------------------------------------
-                                                                       |
-                                       3: ws forward http req        1: websocket connection
-                                                |                      |
-+-------------------------+                  +--v----------------------+-+
-|                         |                  |         webstun           |          Private Network
-|    Private Web service  |  4: http req     |    Private Reverse Proxy  |
++-------------------+      2: http req        +--------------------------+
+|                   |  +------------------->  |         webstun          |          Internet
+|     Browser       |      7: http res        |    Public Edge Server    |
+|                   |  <-------------------+  |                          |
++-------------------+                         +-+----^-----------------^-+
+                                                |    |                 |
+                                                | 6: ws forward http res
+               +-------------------------------------+-----------------+--------------------------+
+                                                |    |                 |
+                                       3: ws forward http req        1:|websocket connection
+                                                +    |                 |
++-------------------------+  5: http res     +--v----+-----------------+-+
+|                         +------------------>         webstun           |          Private Network
+|    Pri^ate Web service  |  4: http req     |    Private Reverse Proxy  |
 |                         <------------------+                           |
 +-------------------------+                  +---------------------------+
 
