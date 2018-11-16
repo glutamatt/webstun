@@ -1,6 +1,6 @@
 # Web Socket Tunnel 
 
-## Expose HTTP Service via a websocke tunnel
+## Expose HTTP Service via a websocket tunnel
 
 Use case: access a webservice behind a private network through a public edge without router port forwaring configuration
 
