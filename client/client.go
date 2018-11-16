@@ -3,6 +3,7 @@ package client
 import (
 	"bufio"
 	"bytes"
+	"fmt"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -15,19 +16,19 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func Start(edge, back string) {
+func ConnectWSAndServe(edge, back string) error {
 	u, err := url.ParseRequestURI(edge)
 	if err != nil {
-		log.Fatalf("Error parsing edge %s : %v", edge, err)
+		return fmt.Errorf("Error parsing edge %s : %v", edge, err)
 	}
 	backendURL, err := url.ParseRequestURI(back)
 	if err != nil {
-		log.Fatalf("url.ParseRequestURI %s err : %v", back, err)
+		return fmt.Errorf("url.ParseRequestURI back %s err : %v", back, err)
 	}
 	log.Printf("connecting to %s", u.String())
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
-		log.Fatal("dial:", err)
+		return fmt.Errorf("websocket.DefaultDialer.Dial err : %v", err)
 	}
 	defer c.Close()
 	log.Printf("connected to %s", u.String())
@@ -65,23 +66,21 @@ func Start(edge, back string) {
 		select {
 		case resp := <-responses:
 			if err := c.WriteMessage(websocket.TextMessage, resp); err != nil {
-				log.Println("c.WriteMessage ERR :", err)
-				return
+				return fmt.Errorf("c.WriteMessage ERR : %v", err)
 			}
 		case <-done:
-			return
+			return nil
 		case <-interrupt:
 			log.Println("interrupt")
 			err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 			if err != nil {
-				log.Println("write close:", err)
-				return
+				return fmt.Errorf("c.WriteMessage(websocket.CloseMessage) ERR : %v", err)
 			}
 			select {
 			case <-done:
 			case <-time.After(time.Second):
 			}
-			return
+			return nil
 		}
 	}
 }

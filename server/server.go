@@ -82,7 +82,7 @@ func websocketHandler(calls <-chan httpCall) func(http.ResponseWriter, *http.Req
 			fmt.Fprintf(w, "error on upgrader.Upgrade: %v\n", err)
 			return
 		}
-		log.Println("backend connected via websocket: ready to accept http calls")
+		log.Println("proxy connected via websocket: ready to accept http calls")
 
 		defer conn.Close()
 
@@ -123,7 +123,7 @@ func websocketHandler(calls <-chan httpCall) func(http.ResponseWriter, *http.Req
 				hash := fmt.Sprintf("%x", sha1.Sum(req))
 				data := append([]byte(fmt.Sprintf("%s\n", hash)), req...)
 				if err = conn.WriteMessage(websocket.TextMessage, data); err != nil {
-					httpCall.resp <- errorResponse(fmt.Errorf("conn.WriteMessage error (closing backend websocket connection): %v", err))
+					httpCall.resp <- errorResponse(fmt.Errorf("conn.WriteMessage error (closing proxy websocket connection): %v", err))
 					return
 				}
 				go disp.Handle(hash, httpCall.resp)

@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 
@@ -11,23 +12,33 @@ import (
 
 func main() {
 	run := flag.String("run", "", "client|server")
+	ws := flag.String("ws", "", "websocket url")
+	port := flag.Int("port", 0, "server port")
+	back := flag.String("back", "", "backend url")
 	flag.Parse()
 
 	if *run == "server" {
-		port := ":3001"
-		log.Printf("Let's go server http://0.0.0.0%s !\n", port)
-		if err := server.ListenAndServe(port); err != nil {
-			panic(err)
+		if *port == 0 {
+			crash(fmt.Errorf("server port is not set"))
+		}
+		log.Printf("Let's go server http://0.0.0.0:%d !\n", *port)
+		if err := server.ListenAndServe(fmt.Sprintf(":%d", *port)); err != nil {
+			crash(fmt.Errorf("server.ListenAndServe error: %v", err))
 		}
 		os.Exit(0)
 	}
 
 	if *run == "client" {
-		log.Println("Client to implement")
-		client.Start("ws://0.0.0.0:3000/_ws", "https://grafana.deez.re")
+		if err := client.ConnectWSAndServe(*ws, *back); err != nil {
+			crash(fmt.Errorf("client error: %v", err))
+		}
 		os.Exit(0)
 	}
 
+	crash(fmt.Errorf("No run"))
+}
+
+func crash(err error) {
 	flag.PrintDefaults()
-	panic("no run")
+	log.Fatalf("Error: %v", err)
 }
