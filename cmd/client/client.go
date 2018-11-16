@@ -30,10 +30,10 @@ func main() {
 	responses := make(chan []byte)
 	signal.Notify(interrupt, os.Interrupt)
 
-	back := "http://192.168.0.18:3000"
+	back := "http://blm-mastersearch-01.sadm.ig-1.net:9200" //"http://192.168.0.18:3000"
 	backendURL, err := url.ParseRequestURI(back)
 	if err != nil {
-		log.Fatal("url.ParseRequestURI %s err : %v", back, err)
+		log.Fatalf("url.ParseRequestURI %s err : %v", back, err)
 	}
 	proxy := httputil.NewSingleHostReverseProxy(backendURL)
 
@@ -92,6 +92,9 @@ func handleRequest(message []byte, responses chan []byte, proxy *httputil.Revers
 		log.Println("http.ReadRequest ERR :", err)
 		return
 	}
+
+	debug, _ := httputil.DumpRequest(req, true)
+	log.Println(string(debug))
 
 	rw := httptest.NewRecorder()
 	proxy.ServeHTTP(rw, req)
