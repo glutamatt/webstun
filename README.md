@@ -1,4 +1,4 @@
-# Web Socket Tunnel 
+# WEBSocketTUNnel 
 
 ## Expose HTTP Service via a websocket tunnel
 
