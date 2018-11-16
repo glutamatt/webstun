@@ -39,6 +39,7 @@ func ConnectWSAndServe(edge, back string) error {
 	signal.Notify(interrupt, os.Interrupt)
 
 	director := httputil.NewSingleHostReverseProxy(backendURL).Director
+	// Wrapping original Director because of https://github.com/golang/go/commit/ae315999c2d5514cec17adbd37cf2438e20cbd12#diff-d863507a61be206d112f6e00e6d812a2R68
 	proxy := &httputil.ReverseProxy{Director: func(r *http.Request) {
 		director(r)
 		r.Host = r.URL.Host
