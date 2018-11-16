@@ -4,7 +4,25 @@
 
 Use case: access a webservice behind a private network through a public edge without router port forwaring configuration
 
-[ Browser ] --(http request)--> [ Public Edge Server ] --(ws message)--> [ Private reverse proxy ] --(http request)--> [ Private Web Service ]
+```
++-------------------+                         +-------------------------+
+|                   |      2: http req        |                         |           Internet
+|     Browser       |  +------------------->  |    Public Edge Server   |
+|                   |                         |                         |
++-------------------+                         +-+----------------------++
+                                                |                      ^
+                                                |                      |
+               ------------------------------------------------------------------------------------
+                                                |                      |
+                                       3: ws forward http req        1: websocket connection
+                                                |                      |
++-------------------------+                  +--v----------------------+-+
+|                         |                  |                           |          Private Network
+|    Private Web service  |  4: http req     |    Private Reverse Proxy  |
+|                         <------------------+                           |
++-------------------------+                  +---------------------------+
+
+```
 
 ### TODO
 
