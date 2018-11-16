@@ -8,8 +8,10 @@ Use case: access a webservice behind a private network through a public edge wit
 
 ### TODO
 
-- [ ] Clean Code
+- [ ] Clean Code, Logs, ...
+- [ ] Secure channels io with timeouts
 - [ ] Factorise Code
+- [ ] Mono binary
 - [ ] Add flags
 - [ ] Dockerize with docker hub
 - [ ] Build Packages with differents architectures (Circle ci ?? Github as artifact repo)
