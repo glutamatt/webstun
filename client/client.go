@@ -1,4 +1,4 @@
-package main
+package client
 
 import (
 	"bufio"
@@ -15,8 +15,15 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func main() {
-	u := url.URL{Scheme: "ws", Host: "localhost:3000", Path: "/_ws"}
+func Start(edge, back string) {
+	u, err := url.ParseRequestURI(edge)
+	if err != nil {
+		log.Fatalf("Error parsing edge %s : %v", edge, err)
+	}
+	backendURL, err := url.ParseRequestURI(back)
+	if err != nil {
+		log.Fatalf("url.ParseRequestURI %s err : %v", back, err)
+	}
 	log.Printf("connecting to %s", u.String())
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
@@ -30,11 +37,6 @@ func main() {
 	responses := make(chan []byte)
 	signal.Notify(interrupt, os.Interrupt)
 
-	back := "https://grafana.deez.re" //"http://blm-mastersearch-01.sadm.ig-1.net:9200" //"http://192.168.0.18:3000"
-	backendURL, err := url.ParseRequestURI(back)
-	if err != nil {
-		log.Fatalf("url.ParseRequestURI %s err : %v", back, err)
-	}
 	director := httputil.NewSingleHostReverseProxy(backendURL).Director
 	proxy := &httputil.ReverseProxy{Director: func(r *http.Request) {
 		director(r)

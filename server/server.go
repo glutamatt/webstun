@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"bufio"
@@ -17,14 +17,22 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func handler(calls chan<- HttpCall) func(http.ResponseWriter, *http.Request) {
+//ListenAndServe set the handlers and start the http server
+func ListenAndServe(addr string) error {
+	var httpCalls = make(chan httpCall)
+	http.HandleFunc("/_ws", websocketHandler(httpCalls))
+	http.HandleFunc("/", handler(httpCalls))
+	return http.ListenAndServe(addr, nil)
+}
+
+func handler(calls chan<- httpCall) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ch := make(chan *http.Response)
 		defer close(ch)
 		timer := time.NewTimer(1 * time.Second)
 		defer timer.Stop()
 		select {
-		case calls <- HttpCall{req: r, resp: ch}:
+		case calls <- httpCall{req: r, resp: ch}:
 			resp := <-ch
 			for k, vv := range resp.Header {
 				for _, v := range vv {
@@ -39,23 +47,35 @@ func handler(calls chan<- HttpCall) func(http.ResponseWriter, *http.Request) {
 	}
 }
 
-type HttpCall struct {
+type httpCall struct {
 	req  *http.Request
 	resp chan<- *http.Response
 }
-
-func errorResponse(err error) *http.Response {
-	return &http.Response{
-		StatusCode: http.StatusInternalServerError,
-		Body:       ioutil.NopCloser(strings.NewReader(err.Error())),
-	}
+type dispatcher struct {
+	lock  sync.Mutex
+	pipes map[string]chan<- *http.Response
 }
 
-func main() {
-	var httpCalls = make(chan HttpCall)
-	var upgrader = websocket.Upgrader{}
+func (d *dispatcher) Handle(hash string, resp chan<- *http.Response) {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+	d.pipes[hash] = resp
+}
 
-	http.HandleFunc("/_ws", func(w http.ResponseWriter, r *http.Request) {
+func (d *dispatcher) Serve(hash string, resp *http.Response) {
+	d.lock.Lock()
+	defer d.lock.Unlock()
+	if call, exist := d.pipes[hash]; exist {
+		call <- resp
+		delete(d.pipes, hash)
+		return
+	}
+	log.Println("Serve", hash, "doesn't exist !!!")
+}
+
+func websocketHandler(calls <-chan httpCall) func(http.ResponseWriter, *http.Request) {
+	var upgrader = websocket.Upgrader{}
+	return func(w http.ResponseWriter, r *http.Request) {
 		conn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -94,7 +114,7 @@ func main() {
 
 		for {
 			select {
-			case httpCall := <-httpCalls:
+			case httpCall := <-calls:
 				req, err := httputil.DumpRequest(httpCall.req, true)
 				if err != nil {
 					httpCall.resp <- errorResponse(fmt.Errorf("httputil.DumpRequest error: %v", err))
@@ -109,31 +129,11 @@ func main() {
 				go disp.Handle(hash, httpCall.resp)
 			}
 		}
-	})
-
-	http.HandleFunc("/", handler(httpCalls))
-	log.Println("Let's go !")
-	log.Fatal(http.ListenAndServe(":3001", nil))
-}
-
-type dispatcher struct {
-	lock  sync.Mutex
-	pipes map[string]chan<- *http.Response
-}
-
-func (d *dispatcher) Handle(hash string, resp chan<- *http.Response) {
-	d.lock.Lock()
-	defer d.lock.Unlock()
-	d.pipes[hash] = resp
-}
-
-func (d *dispatcher) Serve(hash string, resp *http.Response) {
-	d.lock.Lock()
-	defer d.lock.Unlock()
-	if call, exist := d.pipes[hash]; exist {
-		call <- resp
-		delete(d.pipes, hash)
-		return
 	}
-	log.Println("Serve", hash, "doesn't exist !!!")
+}
+func errorResponse(err error) *http.Response {
+	return &http.Response{
+		StatusCode: http.StatusInternalServerError,
+		Body:       ioutil.NopCloser(strings.NewReader(err.Error())),
+	}
 }
