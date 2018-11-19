@@ -10,15 +10,14 @@ jobs:
       - run: dep ensure --vendor-only
       - run: CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -a -installsuffix nocgo -o build/webstun-linux-arm7 .
       - persist_to_workspace:
-          root: build
-          paths:
-            - webstun-linux-arm7
+          root: /go/src/github.com/glutamatt/webstun
   release:
     docker:
       - image: golang:1.11
+    working_directory: /go/src/github.com/glutamatt/webstun
     steps:
       - attach_workspace:
-          at: /build
+          at: /go/src/github.com/glutamatt/webstun
       - run: go get -u github.com/tcnksm/ghr
       - run: go get -u github.com/stevenmatthewt/semantics
       - run:
