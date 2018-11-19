@@ -6,6 +6,8 @@ jobs:
     working_directory: /go/src/github.com/glutamatt/webstun
     steps:
       - checkout
+      - run: go get -u github.com/stevenmatthewt/semantics
+      - run: semantics --output-tag > .TAG
       - run: curl https://raw.githubusercontent.com/golang/dep/v0.5.0/install.sh | sh
       - run: dep ensure --vendor-only
       - run: CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -a -installsuffix nocgo -o build/webstun-linux-arm7 .
@@ -13,6 +15,7 @@ jobs:
           root: /go/src/github.com/glutamatt/webstun
           paths:
             - build
+            - .TAG
   release:
     docker:
       - image: golang:1.11
@@ -21,13 +24,12 @@ jobs:
       - attach_workspace:
           at: /go/src/github.com/glutamatt/webstun
       - run: go get -u github.com/tcnksm/ghr
-      - run: go get -u github.com/stevenmatthewt/semantics
       - run:
           name: create release
           command: |
-            tag=$(semantics --output-tag)
+            tag=$(cat .TAG)
             if [ "$tag" ]; then
-              ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME --replace $tag /build
+              ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME --replace $tag build
             else
               echo "The commit message(s) did not indicate a major/minor/patch version."
             fi
