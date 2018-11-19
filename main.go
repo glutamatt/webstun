@@ -17,13 +17,7 @@ func main() {
 	ws := flag.String("ws", "", "websocket url")
 	port := flag.Int("port", 0, "server port")
 	back := flag.String("back", "", "backend url")
-	version := flag.Bool("version", false, "get application version")
 	flag.Parse()
-
-	if *version {
-		println(appVersion)
-		os.Exit(0)
-	}
 
 	if *run == "server" {
 		if *port == 0 {

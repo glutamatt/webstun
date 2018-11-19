@@ -8,12 +8,11 @@ RUN dep ensure --vendor-only
 COPY server ./server
 COPY client ./client
 COPY main.go ./
-ARG appVersion=dev-0.1
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix nocgo -ldflags "-X main.appVersion=$appVersion" -o /app .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix nocgo -o /webstun .
 
 FROM alpine:3.8
 WORKDIR /
-COPY --from=builder /app .
+COPY --from=builder /webstun /bin
 ARG server_port=443
 ENV SERVER_PORT=$server_port
-CMD ["/bin/sh", "-c", "/app -run server -port ${SERVER_PORT}"]
+CMD ["/bin/sh", "-c", "webstun -run server -port ${SERVER_PORT}"]
