@@ -45,5 +45,5 @@ workflows:
             tags:
               only: /.*/
       - deploy:
-        requires:
+          requires:
             - release
