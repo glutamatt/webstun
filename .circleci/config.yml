@@ -25,6 +25,14 @@ jobs:
       - run: go get -u github.com/tcnksm/ghr
       - run: ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete $(cat VERSION) ./build
 
+  deploy:
+    docker:
+      - image: circleci/node:8
+    steps:
+      - checkout
+      - run: sudo npm install --global --unsafe-perm now
+      - run: now --token $NOW_TOKEN
+
 workflows:
   version: 2.1
   main:
@@ -36,3 +44,6 @@ workflows:
           filters:
             tags:
               only: /.*/
+      - deploy:
+        requires:
+            - release
