@@ -1,6 +1,7 @@
 # WEB Socket TUNnel
 
 [![CircleCI](https://circleci.com/gh/glutamatt/webstun.svg?style=svg)](https://circleci.com/gh/glutamatt/webstun)
+[![](https://img.shields.io/badge/docker-glutamatt/webstun-green.svg?logo=docker&longCache=true&style=flat-square)](https://hub.docker.com/r/glutamatt/webstun/)
 
 ## Expose HTTP Service via a websocket tunnel
 
