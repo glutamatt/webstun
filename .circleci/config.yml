@@ -8,10 +8,12 @@ jobs:
       - checkout
       - run: curl https://raw.githubusercontent.com/golang/dep/v0.5.0/install.sh | sh
       - run: dep ensure --vendor-only
-      - run: |
-        VERSION=$(git describe --exact-match --tags $(git log -n1 --pretty='%h'))
-        echo $VERSION
-        CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -a -installsuffix nocgo -ldflags "-X main.appVersion=$VERSION" -o build/webstun-linux-arm7 .
+      - run:
+          name: version & build
+          command: |
+            VERSION=$(git describe --exact-match --tags $(git log -n1 --pretty='%h'))
+            echo $VERSION
+            CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -a -installsuffix nocgo -ldflags "-X main.appVersion=$VERSION" -o build/webstun-linux-arm7 .
       - persist_to_workspace:
           root: /go/src/github.com/glutamatt/webstun
           paths:
