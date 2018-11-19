@@ -1,4 +1,6 @@
-# WEB Socket TUNnel 
+# WEB Socket TUNnel
+
+[![CircleCI](https://circleci.com/gh/glutamatt/webstun.svg?style=svg)](https://circleci.com/gh/glutamatt/webstun)
 
 ## Expose HTTP Service via a websocket tunnel
 
