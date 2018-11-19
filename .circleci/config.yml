@@ -23,7 +23,7 @@ jobs:
       - run: go get -u github.com/tcnksm/ghr
       - run:
           name: create release
-          command: ghr -t $GITHUB_TOKEN --replace v1 build
+          command: ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME --replace v1.0.0 build
 
 workflows:
   version: 2.1
