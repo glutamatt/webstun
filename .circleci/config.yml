@@ -18,7 +18,7 @@ jobs:
       - image: golang:1.11
     steps:
       - attach_workspace:
-        at: /build
+          at: /build
       - run: go get -u github.com/tcnksm/ghr
       - run: go get -u github.com/stevenmatthewt/semantics
       - run:
