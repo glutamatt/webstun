@@ -28,15 +28,15 @@ Use case: access a webservice behind a private network through a public edge wit
 
 ### TODO
 
-- [ ] Clean Code, Logs, ...
+- [x] Clean Code, Logs, ...
 - [ ] Configuration from env variables
 - [ ] Secure channels io with timeouts
 - [ ] Reconnect the client on error
 - [ ] Single backend connected by websocket
 - [ ] Secure proxy Access with KEYS
 - [ ] Factorise Code
-- [ ] Mono binary
-- [ ] Add flags
+- [x] Mono binary
+- [x] Add flags
 - [ ] Dockerize with docker hub
 - [ ] Build Packages with differents architectures (Circle ci ?? Github as artifact repo)
 - [ ] Deploy on cloud and run on rasp
