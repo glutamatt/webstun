@@ -1,4 +1,4 @@
-version: 2
+version: 2.1
 jobs:
   build:
     docker:
@@ -30,3 +30,13 @@ jobs:
             else
               echo "The commit message(s) did not indicate a major/minor/patch version."
             fi
+
+workflows:
+  version: 2.1
+
+  main:
+    jobs:
+      - build
+      - release:
+          requires:
+            - build
