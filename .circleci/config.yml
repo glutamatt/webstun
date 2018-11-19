@@ -9,7 +9,7 @@ jobs:
       - run: curl https://raw.githubusercontent.com/golang/dep/v0.5.0/install.sh | sh
       - run: dep ensure --vendor-only
       - run: CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -a -installsuffix nocgo -o build/webstun-linux-arm7 .
-      - run: git describe --exact-match --tags $(git log -n1 --pretty='%h') > VERSION
+      - run: git describe --exact-match --tags $(git log -n1 --pretty='%h') > VERSION || echo "Not a tagged version"
       - persist_to_workspace:
           root: /go/src/github.com/glutamatt/webstun
           paths:
@@ -24,13 +24,17 @@ jobs:
           at: /webstun
       - run: go get -u github.com/tcnksm/ghr
       - run: ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete $(cat VERSION) ./build
+
 workflows:
   version: 2.1
-
   main:
     jobs:
       - build
       - release:
           requires:
             - build
-  
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              ignore: /.*/
