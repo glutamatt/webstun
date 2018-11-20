@@ -3,6 +3,7 @@ package client
 import (
 	"bufio"
 	"bytes"
+	"crypto/tls"
 	"fmt"
 	"log"
 	"net/http"
@@ -16,7 +17,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func ConnectWSAndServe(edge, back string) error {
+func ConnectWSAndServe(edge, back string, insecure bool) error {
 	u, err := url.ParseRequestURI(edge)
 	if err != nil {
 		return fmt.Errorf("Error parsing edge %s : %v", edge, err)
@@ -39,11 +40,15 @@ func ConnectWSAndServe(edge, back string) error {
 	signal.Notify(interrupt, os.Interrupt)
 
 	director := httputil.NewSingleHostReverseProxy(backendURL).Director
+	var tr http.RoundTripper
+	if insecure {
+		tr = &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}
+	}
 	// Wrapping original Director because of https://github.com/golang/go/commit/ae315999c2d5514cec17adbd37cf2438e20cbd12#diff-d863507a61be206d112f6e00e6d812a2R68
 	proxy := &httputil.ReverseProxy{Director: func(r *http.Request) {
 		director(r)
 		r.Host = r.URL.Host
-	}}
+	}, Transport: tr}
 
 	go func() {
 		defer close(done)

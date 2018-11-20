@@ -14,5 +14,5 @@ FROM alpine:3.8
 WORKDIR /
 COPY --from=builder /webstun /bin
 ARG server_port=443
-ENV SERVER_PORT=$server_port
-CMD ["/bin/sh", "-c", "webstun -run server -port ${SERVER_PORT}"]
+ENV PORT=$server_port
+CMD ["/bin/sh", "-c", "webstun -run server -port ${PORT} -insecure"]

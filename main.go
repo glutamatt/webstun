@@ -17,6 +17,7 @@ func main() {
 	ws := flag.String("ws", "", "websocket url")
 	port := flag.Int("port", 0, "server port")
 	back := flag.String("back", "", "backend url")
+	insecure := flag.Bool("insecure", false, "Skip TLS verifications")
 	flag.Parse()
 
 	if *run == "server" {
@@ -31,7 +32,7 @@ func main() {
 	}
 
 	if *run == "client" {
-		if err := client.ConnectWSAndServe(*ws, *back); err != nil {
+		if err := client.ConnectWSAndServe(*ws, *back, *insecure); err != nil {
 			crash(fmt.Errorf("client error: %v", err))
 		}
 		os.Exit(0)
