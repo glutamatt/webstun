@@ -35,15 +35,13 @@ jobs:
 
 workflows:
   version: 2.1
-  main:
+  build-release-deploy:
     jobs:
       - build
       - release:
           requires:
             - build
           filters:
-            branches:
-              ignore: /.*/
             tags:
               only: /^v[0-9]+(\.[0-9]+)*$/
       - deploy:
