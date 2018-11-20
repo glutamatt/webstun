@@ -34,10 +34,10 @@ jobs:
       - run: docker tag webstun registry.heroku.com/${HEROKU_APP}/web
       - run: docker push registry.heroku.com/${HEROKU_APP}/web
       - run:
-        name: deploy the last pushed image
-        command: |
-          WEB_DOCKER_IMAGE_ID=$(docker inspect registry.heroku.com/${HEROKU_APP}/web --format={{.Id}})
-          curl -n -X PATCH https://api.heroku.com/apps/${HEROKU_APP}/formation -d '{"updates": [{"type": "web", "docker_image": "$WEB_DOCKER_IMAGE_ID"}]}' -H "Content-Type: application/json" -H "Accept: application/vnd.heroku+json; version=3.docker-releases"
+          name: deploy the last pushed image
+          command: |
+            WEB_DOCKER_IMAGE_ID=$(docker inspect registry.heroku.com/${HEROKU_APP}/web --format={{.Id}})
+            curl -n -X PATCH https://api.heroku.com/apps/${HEROKU_APP}/formation -d '{"updates": [{"type": "web", "docker_image": "$WEB_DOCKER_IMAGE_ID"}]}' -H "Content-Type: application/json" -H "Accept: application/vnd.heroku+json; version=3.docker-releases"
 
 workflows:
   version: 2.1
@@ -52,6 +52,4 @@ workflows:
               ignore: /.*/
             tags:
               only: /^v[0-9]+(\.[0-9]+)*$/
-      - deploy:
-          requires:
-            - build
+      - deploy
