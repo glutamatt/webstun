@@ -10,8 +10,6 @@ import (
 	"net/http/httptest"
 	"net/http/httputil"
 	"net/url"
-	"os"
-	"os/signal"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -26,18 +24,6 @@ func ConnectWSAndServe(edge, back string, insecure bool) error {
 	if err != nil {
 		return fmt.Errorf("url.ParseRequestURI back %s err : %v", back, err)
 	}
-	log.Printf("connecting to %s", u.String())
-	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
-	if err != nil {
-		return fmt.Errorf("websocket.DefaultDialer.Dial err : %v", err)
-	}
-	defer c.Close()
-	log.Printf("connected to %s", u.String())
-
-	done := make(chan struct{})
-	interrupt := make(chan os.Signal, 1)
-	responses := make(chan []byte)
-	signal.Notify(interrupt, os.Interrupt)
 
 	director := httputil.NewSingleHostReverseProxy(backendURL).Director
 	var tr http.RoundTripper
@@ -50,12 +36,31 @@ func ConnectWSAndServe(edge, back string, insecure bool) error {
 		r.Host = r.URL.Host
 	}, Transport: tr}
 
+	for {
+		e := session(u, proxy)
+		log.Printf("Error in websocket session: %v\n", e)
+		time.Sleep(10 * time.Second)
+	}
+}
+
+func session(u *url.URL, proxy *httputil.ReverseProxy) error {
+	log.Printf("connecting to %s", u.String())
+	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	if err != nil {
+		return fmt.Errorf("websocket.DefaultDialer.Dial err : %v", err)
+	}
+	defer c.Close()
+	log.Printf("connected to %s", u.String())
+
+	responses := make(chan []byte)
+	reading := true
+
 	go func() {
-		defer close(done)
-		for {
+		defer close(responses)
+		for reading {
 			messageType, message, err := c.ReadMessage()
 			if err != nil {
-				log.Println("read:", err)
+				log.Println("ws ReadMessage error:", err)
 				return
 			}
 			if messageType == websocket.CloseMessage {
@@ -68,27 +73,14 @@ func ConnectWSAndServe(edge, back string, insecure bool) error {
 		}
 	}()
 
-	for {
-		select {
-		case resp := <-responses:
-			if err := c.WriteMessage(websocket.TextMessage, resp); err != nil {
-				return fmt.Errorf("c.WriteMessage ERR : %v", err)
-			}
-		case <-done:
-			return nil
-		case <-interrupt:
-			log.Println("interrupt")
-			err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
-			if err != nil {
-				return fmt.Errorf("c.WriteMessage(websocket.CloseMessage) ERR : %v", err)
-			}
-			select {
-			case <-done:
-			case <-time.After(time.Second):
-			}
-			return nil
+	for resp := range responses {
+		if err := c.WriteMessage(websocket.TextMessage, resp); err != nil {
+			reading = false
+			return fmt.Errorf("c.WriteMessage ERR : %v", err)
 		}
 	}
+	reading = false
+	return nil
 }
 
 func handleRequest(message []byte, responses chan []byte, proxy *httputil.ReverseProxy) {
