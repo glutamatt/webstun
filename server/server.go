@@ -29,18 +29,22 @@ func handler(calls chan<- httpCall) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ch := make(chan *http.Response)
 		defer close(ch)
-		timer := time.NewTimer(1 * time.Second)
+		timer := time.NewTimer(2 * time.Second)
 		defer timer.Stop()
 		select {
 		case calls <- httpCall{req: r, resp: ch}:
-			resp := <-ch
-			for k, vv := range resp.Header {
-				for _, v := range vv {
-					w.Header().Add(k, v)
+			select {
+			case resp := <-ch:
+				for k, vv := range resp.Header {
+					for _, v := range vv {
+						w.Header().Add(k, v)
+					}
 				}
+				w.WriteHeader(resp.StatusCode)
+				io.Copy(w, resp.Body)
+			case <-timer.C:
+				fmt.Fprintf(w, "ERROR timeout: Unable to get Res from httpCall")
 			}
-			w.WriteHeader(resp.StatusCode)
-			io.Copy(w, resp.Body)
 		case <-timer.C:
 			fmt.Fprintf(w, "ERROR timeout: Unable to push Req to httpCalls chan")
 		}
@@ -87,19 +91,21 @@ func websocketHandler(calls <-chan httpCall) func(http.ResponseWriter, *http.Req
 		defer conn.Close()
 
 		disp := &dispatcher{pipes: map[string]chan<- *http.Response{}}
+		done := make(chan bool)
 
 		go func() {
+			defer close(done)
 			for {
 				messageType, message, err := conn.ReadMessage()
 				if err != nil {
-					log.Println("read err:", err)
+					log.Println("conn.ReadMessage err:", err)
 					return
 				}
 				if messageType == websocket.TextMessage {
 					reader := bufio.NewReader(bytes.NewReader(message))
 					hash, err := reader.ReadString('\n')
 					if err != nil {
-						log.Printf("HASH: %s \n err: %v\n", hash, err)
+						log.Printf("HASH: %s \n error: %v\n", hash, err)
 						continue
 					}
 					resp, err := http.ReadResponse(reader, nil)
@@ -114,6 +120,9 @@ func websocketHandler(calls <-chan httpCall) func(http.ResponseWriter, *http.Req
 
 		for {
 			select {
+			case <-done:
+				log.Println("conn.ReadMessage loop done")
+				return
 			case httpCall := <-calls:
 				req, err := httputil.DumpRequest(httpCall.req, true)
 				if err != nil {
