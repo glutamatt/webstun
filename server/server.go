@@ -28,7 +28,6 @@ func ListenAndServe(addr string) error {
 func handler(calls chan<- httpCall) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ch := make(chan *http.Response)
-		defer close(ch)
 		timer := time.NewTimer(2 * time.Second)
 		defer timer.Stop()
 		select {
