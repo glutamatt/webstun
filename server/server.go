@@ -28,7 +28,7 @@ func ListenAndServe(addr string) error {
 func handler(calls chan<- httpCall) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ch := make(chan *http.Response)
-		timer := time.NewTimer(2 * time.Second)
+		timer := time.NewTimer(5 * time.Second)
 		defer timer.Stop()
 		select {
 		case calls <- httpCall{req: r, resp: ch}:
