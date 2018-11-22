@@ -70,7 +70,12 @@ func (d *dispatcher) Serve(hash string, resp *http.Response) {
 	d.lock.Lock()
 	defer d.lock.Unlock()
 	if call, exist := d.pipes[hash]; exist {
-		call <- resp
+		timer := time.NewTimer(1 * time.Second)
+		select {
+		case <-timer.C:
+			log.Printf("timeout : unable to push response in call chan for %s", hash)
+		case call <- resp:
+		}
 		delete(d.pipes, hash)
 		return
 	}
