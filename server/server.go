@@ -28,7 +28,7 @@ func ListenAndServe(addr string) error {
 func handler(calls chan<- httpCall) func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ch := make(chan *http.Response)
-		timer := time.NewTimer(5 * time.Second)
+		timer := time.NewTimer(10 * time.Second)
 		defer timer.Stop()
 		select {
 		case calls <- httpCall{req: r, resp: ch}:
@@ -69,7 +69,7 @@ func (d *dispatcher) Serve(hash string, resp *http.Response) {
 	d.lock.Lock()
 	defer d.lock.Unlock()
 	if call, exist := d.pipes[hash]; exist {
-		timer := time.NewTimer(1 * time.Second)
+		timer := time.NewTimer(10 * time.Second)
 		select {
 		case <-timer.C:
 			log.Printf("timeout : unable to push response in call chan for %s", hash)
